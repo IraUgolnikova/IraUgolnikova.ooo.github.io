@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анкета для родителей: тренажёры ОГЭ</title>
+    <meta name="robots" content="noindex">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 40px 16px;
+            color: #1f1f1f;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 40px 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 28px;
+            color: #0a2f44;
+            margin: 0 0 8px;
+            line-height: 1.25;
+        }
+        .lead { color: #4a5568; margin: 0 0 24px; }
+        h2 {
+            font-size: 20px;
+            color: #0a2f44;
+            margin: 0 0 18px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        /* прогресс */
+        .progress { display: flex; gap: 6px; margin-bottom: 8px; }
+        .progress span { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: 0.3s; }
+        .progress span.done { background: #3b82f6; }
+        .step-label { font-size: 14px; color: #718096; margin-bottom: 24px; }
+        /* шаги */
+        .step { display: none; }
+        .step.active { display: block; animation: fade 0.25s; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .q { margin-bottom: 22px; }
+        .q[hidden] { display: none; }
+        .q > label, .q > .q-title {
+            display: block;
+            font-weight: 600;
+            color: #0a2f44;
+            margin-bottom: 8px;
+        }
+        .hint { font-weight: 400; color: #718096; font-size: 14px; }
+        .req { color: #e53e3e; }
+        input[type=text], input[type=tel], input[type=email], textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 12px;
+            font: inherit;
+            color: inherit;
+            background: #fff;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        /* варианты-кнопки */
+        .options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.15s;
+            user-select: none;
+        }
+        .options input { position: absolute; opacity: 0; pointer-events: none; }
+        .options label:has(input:checked) { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+        /* карточки */
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .cards label, .cards .info {
+            display: block;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .cards label { cursor: pointer; transition: 0.15s; }
+        .cards input { position: absolute; opacity: 0; pointer-events: none; }
+        .cards label:hover { border-color: #93c5fd; }
+        .cards label:has(input:checked) { border-color: #3b82f6; background: #eff6ff; }
+        .cards b { display: block; color: #0a2f44; margin-bottom: 4px; }
+        .cards .ico { font-size: 26px; display: block; margin-bottom: 6px; }
+        .cards small { color: #4a5568; font-size: 14px; line-height: 1.45; display: block; }
+        /* что готово */
+        .status { list-style: none; padding: 0; margin: 18px 0 0; }
+        .status li { padding: 6px 0; border-bottom: 1px solid #edf2f7; }
+        .status li:last-child { border-bottom: none; }
+        /* кнопки */
+        .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 30px; }
+        button {
+            font: inherit;
+            font-weight: 700;
+            padding: 12px 26px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-next { background: #3b82f6; color: #fff; margin-left: auto; }
+        .btn-next:hover { background: #2563eb; }
+        .btn-back { background: #edf2f7; color: #0a2f44; }
+        button:disabled { opacity: 0.6; cursor: default; }
+        .consent { font-size: 14px; color: #4a5568; display: flex; gap: 10px; align-items: flex-start; }
+        .consent input { margin-top: 4px; width: 18px; height: 18px; flex-shrink: 0; }
+        .error { color: #e53e3e; font-size: 14px; margin-top: 6px; display: none; }
+        .invalid { border-color: #e53e3e !important; }
+        /* результат */
+        .result { display: none; text-align: center; padding: 20px 0; }
+        .result .big { font-size: 48px; }
+        .demo-box {
+            text-align: left;
+            background: #f6f8fa;
+            border: 1px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 16px 18px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin-top: 18px;
+            max-height: 360px;
+            overflow: auto;
+        }
+        .footer-note {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            text-align: center;
+        }
+        .hp { display: none; }
+        @media (max-width: 600px) {
+            body { padding: 16px 12px; }
+            .container { padding: 24px 18px; border-radius: 18px; }
+            h1 { font-size: 23px; }
+            .nav button { padding: 12px 20px; }
+        }
+    </style>
+    <!-- ключ сервиса форм: вставляется в файл anketa-config.js -->
+    <script src="/anketa-config.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Тренажёры ОГЭ для 9 класса</h1>
+    <p class="lead">Короткий опрос для родителей — около 3 минут, можно анонимно. Хочу понять, по каким предметам нужны тренажёры и сколько семьи готовы за это платить.</p>
+
+    <div class="progress" id="progress"></div>
+    <div class="step-label" id="stepLabel"></div>
+
+    <form id="anketa" novalidate>
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off">
+
+        <!-- 1 -->
+        <section class="step" data-title="Что за тренажёры">
+            <h2>Что за тренажёры</h2>
+            <div class="cards">
+                <div class="info"><span class="ico">🔎</span><b>Задачи — как сюжет</b>
+                    <small>Ребёнок вместе с героиней Мирой распутывает загадки городка Тихая Заводь. Чтобы продвинуться дальше, надо решить задачу в формате ОГЭ.</small></div>
+                <div class="info"><span class="ico">🎯</span><b>Проверка по номерам ОГЭ</b>
+                    <small>Сразу видно, какие номера ребёнок решает уверенно, а на каких «плавает».</small></div>
+                <div class="info"><span class="ico">🪜</span><b>Ошибся — не бросаем</b>
+                    <small>После ошибки даётся похожая задача попроще и подсказка, и так пока не станет понятно.</small></div>
+                <div class="info"><span class="ico">📱</span><b>С телефона</b>
+                    <small>Работает в браузере, ничего не нужно устанавливать. Задания авторские, составлены по открытому банку ФИПИ.</small></div>
+            </div>
+            <ul class="status">
+                <li>✅ <b>Математика</b> — уже работает: алгебра, неравенства, практические задачи. Дальше геометрия.</li>
+                <li>🛠 <b>Русский язык</b> — в работе.</li>
+                <li>📊 <b>Отчёт для родителя</b> — скоро.</li>
+                <li>❓ <b>Другие предметы</b> — зависят от ваших ответов.</li>
+            </ul>
+        </section>
+
+        <!-- 2 -->
+        <section class="step" data-title="Как готовитесь сейчас">
+            <h2>Как готовитесь сейчас</h2>
+            <div class="q">
+                <div class="q-title">Как ребёнок сейчас готовится к ОГЭ? <span class="hint">можно несколько</span></div>
+                <div class="options">
+                    <label><input type="checkbox" name="Как готовится" value="Только в школе">Только в школе</label>
+                    <label><input type="checkbox" name="Как готовится" value="Сам по сборникам и сайтам">Сам по сборникам и сайтам</label>
+                    <label><input type="checkbox" name="Как готовится" value="С репетитором">С репетитором</label>
+                    <label><input type="checkbox" name="Как готовится" value="На онлайн-курсах">На онлайн-курсах</label>
+                    <label><input type="checkbox" name="Как готовится" value="Пока никак">Пока никак</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Сколько в месяц сейчас уходит на подготовку к ОГЭ?</div>
+                <div class="options">
+                    <label><input type="radio" name="Тратят сейчас в месяц" value="Ничего">Ничего</label>
+                    <label><input type="radio" name="Тратят сейчас в месяц" value="до 2 000 ₽">до 2 000 ₽</label>
+                    <label><input type="radio" name="Тратят сейчас в месяц" value="2 000–5 000 ₽">2 000–5 000 ₽</label>
+                    <label><input type="radio" name="Тратят сейчас в месяц" value="5 000–10 000 ₽">5 000–10 000 ₽</label>
+                    <label><input type="radio" name="Тратят сейчас в месяц" value="больше 10 000 ₽">больше 10 000 ₽</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3 -->
+        <section class="step" data-title="Предметы">
+            <h2>Предметы</h2>
+            <div class="q">
+                <div class="q-title">По каким предметам ребёнку больше всего нужна помощь? <span class="req">*</span> <span class="hint">можно несколько</span></div>
+                <div class="options" id="subjects">
+                    <label><input type="checkbox" name="Нужна помощь" value="Математика">Математика</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Русский язык">Русский язык</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Обществознание">Обществознание</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Биология">Биология</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Информатика">Информатика</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="География">География</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Химия">Химия</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Физика">Физика</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Английский язык">Английский</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="История">История</label>
+                    <label><input type="checkbox" name="Нужна помощь" value="Литература">Литература</label>
+                </div>
+                <div class="error" id="subjectsError">Выберите хотя бы один предмет.</div>
+            </div>
+            <div class="q">
+                <div class="q-title">Какие два предмета по выбору ребёнок сдаёт?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Предметы по выбору" value="Обществознание">Обществознание</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Биология">Биология</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Информатика">Информатика</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="География">География</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Химия">Химия</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Физика">Физика</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Английский язык">Английский</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="История">История</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Литература">Литература</label>
+                    <label><input type="checkbox" name="Предметы по выбору" value="Ещё не выбрал">Ещё не выбрал</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Что для вас главное в тренажёре? <span class="hint">до 3 вариантов</span></div>
+                <div class="options" id="important">
+                    <label><input type="checkbox" name="Главное" value="Ребёнку интересно, не надо заставлять">Ребёнку интересно, не надо заставлять</label>
+                    <label><input type="checkbox" name="Главное" value="Видно, какие темы проседают">Видно, какие темы проседают</label>
+                    <label><input type="checkbox" name="Главное" value="Отчёт для родителя">Отчёт для меня</label>
+                    <label><input type="checkbox" name="Главное" value="Объясняет ошибки">Объясняет ошибки, а не просто «неверно»</label>
+                    <label><input type="checkbox" name="Главное" value="Можно с телефона">Можно с телефона</label>
+                    <label><input type="checkbox" name="Главное" value="Недорого">Недорого</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4 -->
+        <section class="step" data-title="Цена">
+            <h2>Цена</h2>
+            <div class="q">
+                <div class="q-title">Сколько готовы платить за тренажёр по одному предмету в месяц?</div>
+                <div class="options">
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="Только бесплатно">Только бесплатно</label>
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="до 300 ₽">до 300 ₽</label>
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="300–500 ₽">300–500 ₽</label>
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="500–1 000 ₽">500–1 000 ₽</label>
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="1 000–1 500 ₽">1 000–1 500 ₽</label>
+                    <label><input type="radio" name="Тренажёр 1 предмет / мес" value="больше 1 500 ₽">больше 1 500 ₽</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">А за пакет «математика + русский» в месяц?</div>
+                <div class="options">
+                    <label><input type="radio" name="Пакет мат+рус / мес" value="до 500 ₽">до 500 ₽</label>
+                    <label><input type="radio" name="Пакет мат+рус / мес" value="500–1 000 ₽">500–1 000 ₽</label>
+                    <label><input type="radio" name="Пакет мат+рус / мес" value="1 000–2 000 ₽">1 000–2 000 ₽</label>
+                    <label><input type="radio" name="Пакет мат+рус / мес" value="2 000–3 000 ₽">2 000–3 000 ₽</label>
+                    <label><input type="radio" name="Пакет мат+рус / мес" value="Пакет не нужен">Пакет не нужен</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Интересен ли онлайн-репетитор? <span class="hint">можно несколько</span></div>
+                <div class="cards" id="tutor">
+                    <label><input type="checkbox" name="Онлайн-репетитор" value="Живой преподаватель, индивидуально">
+                        <span class="ico">👩‍🏫</span><b>Живой, один на один</b>
+                        <small>Преподаватель по видеосвязи, только ваш ребёнок.</small></label>
+                    <label><input type="checkbox" name="Онлайн-репетитор" value="Живой преподаватель, мини-группа">
+                        <span class="ico">👥</span><b>Живой, мини-группа</b>
+                        <small>3–5 ребят, дешевле индивидуальных занятий.</small></label>
+                    <label><input type="checkbox" name="Онлайн-репетитор" value="Нейрорепетитор">
+                        <span class="ico">🤖</span><b>Нейрорепетитор</b>
+                        <small>ИИ-помощник: в любое время отвечает на вопросы ребёнка и объясняет по шагам.</small></label>
+                    <label><input type="checkbox" name="Онлайн-репетитор" value="Не нужен, хватит тренажёра">
+                        <span class="ico">✋</span><b>Не нужен</b>
+                        <small>Хватит тренажёра.</small></label>
+                </div>
+            </div>
+            <div class="q" id="qLive" hidden>
+                <div class="q-title">Сколько готовы платить за одно онлайн-занятие с преподавателем (60 минут)?</div>
+                <div class="options">
+                    <label><input type="radio" name="Занятие с преподавателем" value="до 500 ₽">до 500 ₽</label>
+                    <label><input type="radio" name="Занятие с преподавателем" value="500–800 ₽">500–800 ₽</label>
+                    <label><input type="radio" name="Занятие с преподавателем" value="800–1 200 ₽">800–1 200 ₽</label>
+                    <label><input type="radio" name="Занятие с преподавателем" value="1 200–1 500 ₽">1 200–1 500 ₽</label>
+                    <label><input type="radio" name="Занятие с преподавателем" value="больше 1 500 ₽">больше 1 500 ₽</label>
+                </div>
+            </div>
+            <div class="q" id="qNeuro" hidden>
+                <div class="q-title">Сколько готовы платить за нейрорепетитора в месяц?</div>
+                <div class="options">
+                    <label><input type="radio" name="Нейрорепетитор / мес" value="до 500 ₽">до 500 ₽</label>
+                    <label><input type="radio" name="Нейрорепетитор / мес" value="500–1 000 ₽">500–1 000 ₽</label>
+                    <label><input type="radio" name="Нейрорепетитор / мес" value="1 000–2 000 ₽">1 000–2 000 ₽</label>
+                    <label><input type="radio" name="Нейрорепетитор / мес" value="больше 2 000 ₽">больше 2 000 ₽</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 -->
+        <section class="step" data-title="Попробовать">
+            <h2>Попробовать бесплатно</h2>
+            <div class="q">
+                <div class="q-title">Хотите, чтобы ребёнок попробовал тренажёр по математике бесплатно?</div>
+                <div class="options">
+                    <label><input type="radio" name="Попробовать" value="Да, напишите мне">Да, напишите мне</label>
+                    <label><input type="radio" name="Попробовать" value="Пока нет">Пока нет</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="name">Как вас зовут? <span class="hint">по желанию</span></label>
+                <input type="text" id="name" name="Имя">
+            </div>
+            <div class="q">
+                <label for="contact">Как с вами связаться? <span class="hint">по желанию: телефон, Telegram или MAX</span></label>
+                <input type="text" id="contact" name="Контакт">
+            </div>
+            <div class="q">
+                <label for="extra">Что ещё хотите сказать или спросить?</label>
+                <textarea id="extra" name="Дополнительно"></textarea>
+            </div>
+            <div class="q" id="qConsent">
+                <label class="consent">
+                    <input type="checkbox" id="consent">
+                    <span>Я даю <a href="/soglasie" target="_blank">согласие на обработку персональных данных</a> в соответствии с <a href="/Politika_konf_2026" target="_blank">Политикой обработки персональных данных</a>.</span>
+                </label>
+                <div class="error" id="consentError">Вы оставили имя или контакт — без согласия анкету отправить нельзя. Можно стереть их и отправить анонимно.</div>
+            </div>
+        </section>
+
+        <div class="nav" id="nav">
+            <button type="button" class="btn-back" id="back">← Назад</button>
+            <button type="button" class="btn-next" id="next">Дальше →</button>
+        </div>
+    </form>
+
+    <div class="result" id="result">
+        <div class="big">✅</div>
+        <h2 style="border:none;padding:0;display:inline-block">Спасибо за ответы!</h2>
+        <p>Итоги опроса расскажу в родительском чате.</p>
+        <div id="demo"></div>
+    </div>
+
+    <div class="footer-note">© 2026, ООО «СМАЙЛ-2»</div>
+</div>
+
+<script>
+(function () {
+    var form = document.getElementById('anketa');
+    var steps = Array.prototype.slice.call(form.querySelectorAll('.step'));
+    var progress = document.getElementById('progress');
+    var label = document.getElementById('stepLabel');
+    var back = document.getElementById('back');
+    var next = document.getElementById('next');
+    var current = 0;
+
+    steps.forEach(function () { progress.appendChild(document.createElement('span')); });
+
+    // вопросы о цене репетитора показываем только для выбранных форматов
+    function applyTutor() {
+        var picked = Array.prototype.map.call(
+            form.querySelectorAll('input[name="Онлайн-репетитор"]:checked'),
+            function (el) { return el.value; });
+        document.getElementById('qLive').hidden = !picked.some(function (v) { return v.indexOf('Живой') === 0; });
+        document.getElementById('qNeuro').hidden = picked.indexOf('Нейрорепетитор') === -1;
+    }
+    form.querySelectorAll('input[name="Онлайн-репетитор"]').forEach(function (el) {
+        el.addEventListener('change', applyTutor);
+    });
+
+    // «главное» — не больше трёх галочек
+    form.querySelectorAll('input[name="Главное"]').forEach(function (el) {
+        el.addEventListener('change', function () {
+            if (form.querySelectorAll('input[name="Главное"]:checked').length > 3) el.checked = false;
+        });
+    });
+
+    function show(i) {
+        applyTutor();
+        steps.forEach(function (s, n) { s.classList.toggle('active', n === i); });
+        Array.prototype.forEach.call(progress.children, function (b, n) { b.classList.toggle('done', n <= i); });
+        label.textContent = 'Шаг ' + (i + 1) + ' из ' + steps.length + ': ' + steps[i].dataset.title;
+        back.style.visibility = i === 0 ? 'hidden' : 'visible';
+        next.textContent = i === steps.length - 1 ? 'Отправить анкету' : 'Дальше →';
+        current = i;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // проверка на текущем шаге
+    function valid(i) {
+        var ok = true;
+        if (steps[i].querySelector('#subjects')) {
+            var picked = !!form.querySelector('input[name="Нужна помощь"]:checked');
+            document.getElementById('subjectsError').style.display = picked ? 'none' : 'block';
+            if (!picked) ok = false;
+        }
+        // согласие нужно, только если оставили имя или контакт
+        var consent = steps[i].querySelector('#consent');
+        if (consent) {
+            var personal = document.getElementById('name').value.trim() || document.getElementById('contact').value.trim();
+            var bad = personal && !consent.checked;
+            document.getElementById('consentError').style.display = bad ? 'block' : 'none';
+            if (bad) ok = false;
+        }
+        return ok;
+    }
+
+    // собираем ответы: несколько галочек одного вопроса — через запятую; скрытые вопросы не берём
+    function collect() {
+        var data = {};
+        form.querySelectorAll('input[name], textarea[name]').forEach(function (el) {
+            if (el.name === 'botcheck') return;
+            if (el.closest('[hidden]')) return;
+            if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+            var v = el.value.trim();
+            if (!v) return;
+            data[el.name] = data[el.name] ? data[el.name] + ', ' + v : v;
+        });
+        return data;
+    }
+
+    function asText(data) {
+        return Object.keys(data).map(function (k) { return k + ': ' + data[k]; }).join('\n');
+    }
+
+    function done(demoText) {
+        form.style.display = 'none';
+        progress.style.display = 'none';
+        label.style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        if (demoText) {
+            document.getElementById('demo').innerHTML =
+                '<p class="hint">Демо-режим: ключ сервиса форм ещё не вставлен, поэтому письмо не ушло. Вот что пришло бы на почту:</p>' +
+                '<div class="demo-box"></div>';
+            document.querySelector('#demo .demo-box').textContent = demoText;
+        }
+    }
+
+    function submit() {
+        var data = collect();
+        var key = window.ANKETA_KEY;
+        if (!key || key.indexOf('ВСТАВЬ') === 0) { done(asText(data)); return; }
+        if (form.botcheck.checked) return;
+
+        next.disabled = true;
+        next.textContent = 'Отправляю…';
+        var payload = {
+            access_key: key,
+            subject: 'Анкета ОГЭ (родители): ' + (data['Имя'] || 'аноним') + ' — ' + (data['Нужна помощь'] || ''),
+            from_name: 'Анкета edu-smile.ru'
+        };
+        Object.keys(data).forEach(function (k) { payload[k] = data[k]; });
+
+        fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) { done(); return; }
+            throw new Error(res.message);
+        })
+        .catch(function () {
+            next.disabled = false;
+            next.textContent = 'Отправить анкету';
+            alert('Не получилось отправить. Попробуйте ещё раз или напишите на info@edu-smile.ru');
+        });
+    }
+
+    next.addEventListener('click', function () {
+        if (!valid(current)) return;
+        if (current < steps.length - 1) show(current + 1);
+        else submit();
+    });
+    back.addEventListener('click', function () { show(current - 1); });
+
+    show(0);
+})();
+</script>
+
+</body>
+</html>
