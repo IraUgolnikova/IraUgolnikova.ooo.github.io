@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анкета: сайт для вашего дела</title>
+    <meta name="robots" content="noindex">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 40px 16px;
+            color: #1f1f1f;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 40px 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 28px;
+            color: #0a2f44;
+            margin: 0 0 8px;
+            line-height: 1.25;
+        }
+        .lead { color: #4a5568; margin: 0 0 24px; }
+        h2 {
+            font-size: 20px;
+            color: #0a2f44;
+            margin: 0 0 18px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        /* прогресс */
+        .progress { display: flex; gap: 6px; margin-bottom: 8px; }
+        .progress span { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; transition: 0.3s; }
+        .progress span.done { background: #3b82f6; }
+        .step-label { font-size: 14px; color: #718096; margin-bottom: 24px; }
+        /* шаги */
+        .step { display: none; }
+        .step.active { display: block; animation: fade 0.25s; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .q { margin-bottom: 22px; }
+        .q > label, .q > .q-title {
+            display: block;
+            font-weight: 600;
+            color: #0a2f44;
+            margin-bottom: 8px;
+        }
+        .hint { font-weight: 400; color: #718096; font-size: 14px; }
+        .req { color: #e53e3e; }
+        input[type=text], input[type=tel], input[type=email], textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 12px;
+            font: inherit;
+            color: inherit;
+            background: #fff;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        /* варианты-кнопки */
+        .options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1px solid #cbd5e0;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.15s;
+            user-select: none;
+        }
+        .options input { position: absolute; opacity: 0; pointer-events: none; }
+        .options label:has(input:checked) { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+        /* карточки типа сайта */
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .cards label {
+            display: block;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .cards input { position: absolute; opacity: 0; pointer-events: none; }
+        .cards label:hover { border-color: #93c5fd; }
+        .cards label:has(input:checked) { border-color: #3b82f6; background: #eff6ff; }
+        .cards b { display: block; color: #0a2f44; margin-bottom: 4px; }
+        .cards .ico { font-size: 26px; display: block; margin-bottom: 6px; }
+        .cards small { color: #4a5568; font-size: 14px; line-height: 1.45; display: block; }
+        /* кнопки */
+        .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 30px; }
+        button {
+            font: inherit;
+            font-weight: 700;
+            padding: 12px 26px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-next { background: #3b82f6; color: #fff; margin-left: auto; }
+        .btn-next:hover { background: #2563eb; }
+        .btn-back { background: #edf2f7; color: #0a2f44; }
+        button:disabled { opacity: 0.6; cursor: default; }
+        .consent { font-size: 14px; color: #4a5568; display: flex; gap: 10px; align-items: flex-start; }
+        .consent input { margin-top: 4px; width: 18px; height: 18px; flex-shrink: 0; }
+        .error { color: #e53e3e; font-size: 14px; margin-top: 6px; display: none; }
+        .invalid { border-color: #e53e3e !important; }
+        /* результат */
+        .result { display: none; text-align: center; padding: 20px 0; }
+        .result .big { font-size: 48px; }
+        .demo-box {
+            text-align: left;
+            background: #f6f8fa;
+            border: 1px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 16px 18px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin-top: 18px;
+            max-height: 360px;
+            overflow: auto;
+        }
+        .footer-note {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            text-align: center;
+        }
+        .hp { display: none; }
+        @media (max-width: 600px) {
+            body { padding: 16px 12px; }
+            .container { padding: 24px 18px; border-radius: 18px; }
+            h1 { font-size: 23px; }
+            .nav button { padding: 12px 20px; }
+        }
+    </style>
+    <!-- ключ сервиса форм: вставляется в файл anketa-config.js -->
+    <script src="/anketa-config.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Сайт для вашего дела</h1>
+    <p class="lead">Ответьте на вопросы — это около 10 минут. Где сомневаетесь, выбирайте «не знаю»: разберёмся вместе. После ответов пришлю 1–2 варианта с ценой и сроками.</p>
+
+    <div class="progress" id="progress"></div>
+    <div class="step-label" id="stepLabel"></div>
+
+    <form id="anketa" novalidate>
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off">
+
+        <!-- 1 -->
+        <section class="step" data-title="О вас и вашем деле">
+            <h2>О вас и вашем деле</h2>
+            <div class="q">
+                <label for="name">Как вас зовут? <span class="req">*</span></label>
+                <input type="text" id="name" name="Имя" required>
+            </div>
+            <div class="q">
+                <label for="contact">Как с вами связаться? <span class="req">*</span> <span class="hint">телефон, Telegram или e-mail</span></label>
+                <input type="text" id="contact" name="Контакт" required>
+            </div>
+            <div class="q">
+                <label for="brand">Как называется ваше дело? <span class="hint">бренд, мастерская, проект</span></label>
+                <input type="text" id="brand" name="Название дела">
+            </div>
+            <div class="q">
+                <div class="q-title">Что вы продаёте или предлагаете?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Что продаёт" value="Вещи ручной работы">Вещи ручной работы</label>
+                    <label><input type="checkbox" name="Что продаёт" value="Услуги">Услуги</label>
+                    <label><input type="checkbox" name="Что продаёт" value="Занятия / мастер-классы">Занятия / мастер-классы</label>
+                    <label><input type="checkbox" name="Что продаёт" value="Онлайн-курсы">Онлайн-курсы</label>
+                    <label><input type="checkbox" name="Что продаёт" value="Мероприятия">Мероприятия</label>
+                    <label><input type="checkbox" name="Что продаёт" value="Другое">Другое</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="buyers">Кто ваши покупатели? <span class="hint">возраст, город или вся Россия, откуда о вас узнают</span></label>
+                <textarea id="buyers" name="Покупатели"></textarea>
+            </div>
+            <div class="q">
+                <div class="q-title">Ваш статус</div>
+                <div class="options">
+                    <label><input type="radio" name="Статус" value="Самозанятая(ый)">Самозанятая(ый)</label>
+                    <label><input type="radio" name="Статус" value="ИП">ИП</label>
+                    <label><input type="radio" name="Статус" value="ООО">ООО</label>
+                    <label><input type="radio" name="Статус" value="Пока без статуса">Пока без статуса</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="links">Где вы уже есть? <span class="hint">ссылки на ВК, Telegram, Instagram, Авито, маркетплейсы, сайт</span></label>
+                <textarea id="links" name="Соцсети и площадки"></textarea>
+            </div>
+        </section>
+
+        <!-- 2 -->
+        <section class="step" data-title="Какой сайт нужен">
+            <h2>Какой сайт вам ближе? <span class="req">*</span></h2>
+            <div class="q">
+                <div class="cards" id="siteType">
+                    <label><input type="radio" name="Тип сайта" value="А. Визитка" required>
+                        <span class="ico">🪪</span><b>Визитка</b>
+                        <small>Кто я, что делаю, примеры работ, контакты, кнопка «Написать».</small></label>
+                    <label><input type="radio" name="Тип сайта" value="Б. Каталог + заявка">
+                        <span class="ico">📋</span><b>Каталог + заявка</b>
+                        <small>Карточки с ценами. Клиент выбирает и оставляет заявку, вы связываетесь сами.</small></label>
+                    <label><input type="radio" name="Тип сайта" value="В. Магазин с корзиной">
+                        <span class="ico">🛒</span><b>Магазин с корзиной</b>
+                        <small>Несколько товаров в корзину (размер, цвет, количество). Оплата после подтверждения.</small></label>
+                    <label><input type="radio" name="Тип сайта" value="Г. Магазин с оплатой на сайте">
+                        <span class="ico">💳</span><b>Оплата на сайте</b>
+                        <small>Клиент сразу платит картой на сайте.</small></label>
+                    <label><input type="radio" name="Тип сайта" value="Д. Продажа курсов/занятий">
+                        <span class="ico">🎓</span><b>Курсы онлайн</b>
+                        <small>Оплатил — получил доступ к урокам.</small></label>
+                    <label><input type="radio" name="Тип сайта" value="Не знаю, помогите выбрать">
+                        <span class="ico">🤔</span><b>Не знаю</b>
+                        <small>Помогите выбрать.</small></label>
+                </div>
+                <div class="error" id="siteTypeError">Выберите вариант — можно «Не знаю».</div>
+            </div>
+            <div class="q">
+                <label for="likes">Сайты, которые вам нравятся <span class="hint">1–3 ссылки и что именно нравится</span></label>
+                <textarea id="likes" name="Сайты-образцы"></textarea>
+            </div>
+            <div class="q">
+                <div class="q-title">Сколько товаров или услуг будет на сайте?</div>
+                <div class="options">
+                    <label><input type="radio" name="Количество товаров" value="до 10">до 10</label>
+                    <label><input type="radio" name="Количество товаров" value="10–50">10–50</label>
+                    <label><input type="radio" name="Количество товаров" value="больше 50">больше 50</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="goods">Расскажите про товары <span class="hint">варианты (размер, цвет, материал), в наличии или под заказ, сколько дней изготовление</span></label>
+                <textarea id="goods" name="Про товары"></textarea>
+            </div>
+        </section>
+
+        <!-- 3 -->
+        <section class="step" data-title="Как работают заказы">
+            <h2>Как работают заказы</h2>
+            <div class="q">
+                <div class="q-title">Куда удобно получать заказы?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Куда заказы" value="Почта">Почта</label>
+                    <label><input type="checkbox" name="Куда заказы" value="Telegram">Telegram</label>
+                    <label><input type="checkbox" name="Куда заказы" value="ВК">ВК</label>
+                    <label><input type="checkbox" name="Куда заказы" value="WhatsApp">WhatsApp</label>
+                    <label><input type="checkbox" name="Куда заказы" value="Таблица">Таблица</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Как вы берёте оплату сейчас?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Оплата сейчас" value="Перевод на карту / СБП">Перевод / СБП</label>
+                    <label><input type="checkbox" name="Оплата сейчас" value="Наличные">Наличные</label>
+                    <label><input type="checkbox" name="Оплата сейчас" value="Терминал / эквайринг">Терминал / эквайринг</label>
+                    <label><input type="checkbox" name="Оплата сейчас" value="Чек через «Мой налог»">Чек через «Мой налог»</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Доставка</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Доставка" value="Самовывоз">Самовывоз</label>
+                    <label><input type="checkbox" name="Доставка" value="По городу">По городу</label>
+                    <label><input type="checkbox" name="Доставка" value="Почта России">Почта России</label>
+                    <label><input type="checkbox" name="Доставка" value="СДЭК">СДЭК</label>
+                    <label><input type="checkbox" name="Доставка" value="Boxberry">Boxberry</label>
+                    <label><input type="checkbox" name="Доставка" value="Не нужна">Не нужна</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="orders">Предположительно сколько заказов в месяц? <span class="hint">примерно, можно «не знаю»</span></label>
+                <input type="text" id="orders" name="Заказов в месяц">
+            </div>
+        </section>
+
+        <!-- 4 -->
+        <section class="step" data-title="Материалы">
+            <h2>Материалы</h2>
+            <div class="q">
+                <div class="q-title">Есть ли хорошие фото товаров или работ?</div>
+                <div class="options">
+                    <label><input type="radio" name="Фото" value="Да">Да</label>
+                    <label><input type="radio" name="Фото" value="Есть, но так себе">Есть, но так себе</label>
+                    <label><input type="radio" name="Фото" value="Нет">Нет</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Логотип, фирменные цвета, шрифты</div>
+                <div class="options">
+                    <label><input type="radio" name="Фирменный стиль" value="Есть">Есть</label>
+                    <label><input type="radio" name="Фирменный стиль" value="Частично">Частично</label>
+                    <label><input type="radio" name="Фирменный стиль" value="Нет">Нет</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Тексты для сайта</div>
+                <div class="options">
+                    <label><input type="radio" name="Тексты" value="Напишу сама(сам)">Напишу сама(сам)</label>
+                    <label><input type="radio" name="Тексты" value="Нужна помощь">Нужна помощь</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 -->
+        <section class="step" data-title="Как будем работать">
+            <h2>Как будем работать</h2>
+            <div class="q">
+                <div class="q-title">Как хотите получить сайт?</div>
+                <div class="options">
+                    <label><input type="radio" name="Формат" value="Под ключ — делаете вы">Под ключ — делаете вы</label>
+                    <label><input type="radio" name="Формат" value="Делаем вместе, научите править самой(ому)">Делаем вместе, потом правлю сама(сам)</label>
+                    <label><input type="radio" name="Формат" value="Научите сделать сайт самой(ому)">Хочу научиться сделать сам(а)</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Где разместить сайт?</div>
+                <div class="options">
+                    <label><input type="radio" name="Размещение" value="Бесплатно (GitHub Pages)">Бесплатно (GitHub Pages)</label>
+                    <label><input type="radio" name="Размещение" value="Конструктор (Тильда и др.)">Конструктор (Тильда и др.)</label>
+                    <label><input type="radio" name="Размещение" value="Не знаю, предложите варианты">Не знаю, предложите</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Свой домен (адрес сайта)</div>
+                <div class="options">
+                    <label><input type="radio" name="Домен" value="Уже есть">Уже есть</label>
+                    <label><input type="radio" name="Домен" value="Помогите выбрать и купить">Помогите выбрать и купить</label>
+                    <label><input type="radio" name="Домен" value="Пока бесплатный адрес">Пока бесплатный адрес</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">С чем вы уже работаете?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Инструменты" value="ChatGPT">ChatGPT</label>
+                    <label><input type="checkbox" name="Инструменты" value="Claude">Claude</label>
+                    <label><input type="checkbox" name="Инструменты" value="Claude Code">Claude Code</label>
+                    <label><input type="checkbox" name="Инструменты" value="Python / код">Python / код</label>
+                    <label><input type="checkbox" name="Инструменты" value="GitHub">GitHub</label>
+                    <label><input type="checkbox" name="Инструменты" value="Пока ни с чем">Пока ни с чем</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Хотите научиться работать с ИИ, чтобы самим править сайт?</div>
+                <div class="options">
+                    <label><input type="radio" name="Обучение ИИ" value="Да">Да</label>
+                    <label><input type="radio" name="Обучение ИИ" value="Нет, пусть правите вы">Нет, правите вы</label>
+                    <label><input type="radio" name="Обучение ИИ" value="Расскажите подробнее">Расскажите подробнее</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Нейросети (ChatGPT, Claude) открываются у вас без проблем?</div>
+                <div class="options">
+                    <label><input type="radio" name="Доступ к ИИ" value="Да, всё работает">Да, всё работает</label>
+                    <label><input type="radio" name="Доступ к ИИ" value="Бывают проблемы, нужна помощь">Бывают проблемы, нужна помощь</label>
+                    <label><input type="radio" name="Доступ к ИИ" value="Не пробовал(а)">Не пробовал(а)</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6 -->
+        <section class="step" data-title="Документы и продвижение">
+            <h2>Документы</h2>
+            <div class="q">
+                <div class="q-title">Нужна ли помощь с документами для сайта? <span class="hint">политика конфиденциальности, согласие на обработку данных, оферта, условия доставки и возврата</span></div>
+                <div class="options">
+                    <label><input type="radio" name="Документы" value="Да, нужна">Да, нужна</label>
+                    <label><input type="radio" name="Документы" value="Есть свои">Есть свои</label>
+                    <label><input type="radio" name="Документы" value="Не знаю">Не знаю</label>
+                </div>
+            </div>
+            <h2 style="margin-top:30px">Продвижение</h2>
+            <div class="q">
+                <div class="q-title">Откуда придут посетители сайта?</div>
+                <div class="options">
+                    <label><input type="checkbox" name="Откуда посетители" value="Из соцсетей">Из соцсетей</label>
+                    <label><input type="checkbox" name="Откуда посетители" value="Из поиска Яндекса/Google">Из поиска</label>
+                    <label><input type="checkbox" name="Откуда посетители" value="Из рекламы">Из рекламы</label>
+                    <label><input type="checkbox" name="Откуда посетители" value="Пока не знаю">Пока не знаю</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Нужна ли настройка для поиска (SEO) и статистика посещений (Яндекс.Метрика)?</div>
+                <div class="options">
+                    <label><input type="radio" name="SEO и Метрика" value="Да">Да</label>
+                    <label><input type="radio" name="SEO и Метрика" value="Нет">Нет</label>
+                    <label><input type="radio" name="SEO и Метрика" value="Не знаю">Не знаю</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7 -->
+        <section class="step" data-title="Бюджет и сроки">
+            <h2>Бюджет и сроки</h2>
+            <div class="q">
+                <div class="q-title">Сколько готовы вложить в создание сайта разово?</div>
+                <div class="options">
+                    <label><input type="radio" name="Бюджет разово" value="до 5 000 ₽">до 5 000 ₽</label>
+                    <label><input type="radio" name="Бюджет разово" value="5–10 тыс. ₽">5–10 тыс. ₽</label>
+                    <label><input type="radio" name="Бюджет разово" value="10–20 тыс. ₽">10–20 тыс. ₽</label>
+                    <label><input type="radio" name="Бюджет разово" value="больше 20 тыс. ₽">больше</label>
+                    <label><input type="radio" name="Бюджет разово" value="Хочу узнать варианты">Хочу узнать варианты</label>
+                </div>
+            </div>
+            <div class="q">
+                <div class="q-title">Сколько готовы платить ежемесячно за работу сайта?</div>
+                <div class="options">
+                    <label><input type="radio" name="Бюджет в месяц" value="0 ₽ (только домен раз в год)">0 ₽, только домен</label>
+                    <label><input type="radio" name="Бюджет в месяц" value="до 500 ₽">до 500 ₽</label>
+                    <label><input type="radio" name="Бюджет в месяц" value="до 1 000 ₽">до 1 000 ₽</label>
+                    <label><input type="radio" name="Бюджет в месяц" value="больше 1 000 ₽">больше</label>
+                </div>
+            </div>
+            <div class="q">
+                <label for="deadline">К какой дате нужен сайт? <span class="hint">есть ли повод: ярмарка, грант, сезон</span></label>
+                <input type="text" id="deadline" name="Срок и повод">
+            </div>
+            <div class="q">
+                <label for="extra">Что ещё важно рассказать?</label>
+                <textarea id="extra" name="Дополнительно"></textarea>
+            </div>
+            <div class="q">
+                <label class="consent">
+                    <input type="checkbox" id="consent" required>
+                    <span>Я даю <a href="/soglasie" target="_blank">согласие на обработку персональных данных</a> в соответствии с <a href="/Politika_konf_2026" target="_blank">Политикой обработки персональных данных</a>.</span>
+                </label>
+                <div class="error" id="consentError">Без согласия анкету отправить нельзя.</div>
+            </div>
+        </section>
+
+        <div class="nav" id="nav">
+            <button type="button" class="btn-back" id="back">← Назад</button>
+            <button type="button" class="btn-next" id="next">Дальше →</button>
+        </div>
+    </form>
+
+    <div class="result" id="result">
+        <div class="big">✅</div>
+        <h2 style="border:none;padding:0;display:inline-block">Спасибо! Анкета отправлена</h2>
+        <p>Я изучу ответы и свяжусь с вами в течение 2 рабочих дней.</p>
+        <div id="demo"></div>
+    </div>
+
+    <div class="footer-note">© 2026, ООО «СМАЙЛ-2»</div>
+</div>
+
+<script>
+(function () {
+    var form = document.getElementById('anketa');
+    var steps = Array.prototype.slice.call(form.querySelectorAll('.step'));
+    var progress = document.getElementById('progress');
+    var label = document.getElementById('stepLabel');
+    var back = document.getElementById('back');
+    var next = document.getElementById('next');
+    var current = 0;
+
+    steps.forEach(function () { progress.appendChild(document.createElement('span')); });
+
+    function show(i) {
+        steps.forEach(function (s, n) { s.classList.toggle('active', n === i); });
+        Array.prototype.forEach.call(progress.children, function (b, n) { b.classList.toggle('done', n <= i); });
+        label.textContent = 'Шаг ' + (i + 1) + ' из ' + steps.length + ': ' + steps[i].dataset.title;
+        back.style.visibility = i === 0 ? 'hidden' : 'visible';
+        next.textContent = i === steps.length - 1 ? 'Отправить анкету' : 'Дальше →';
+        current = i;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // проверка обязательных полей на текущем шаге
+    function valid(i) {
+        var ok = true;
+        steps[i].querySelectorAll('input[type=text][required]').forEach(function (el) {
+            var bad = !el.value.trim();
+            el.classList.toggle('invalid', bad);
+            if (bad) ok = false;
+        });
+        if (steps[i].querySelector('#siteType')) {
+            var picked = !!form.querySelector('input[name="Тип сайта"]:checked');
+            document.getElementById('siteTypeError').style.display = picked ? 'none' : 'block';
+            if (!picked) ok = false;
+        }
+        var consent = steps[i].querySelector('#consent');
+        if (consent) {
+            document.getElementById('consentError').style.display = consent.checked ? 'none' : 'block';
+            if (!consent.checked) ok = false;
+        }
+        return ok;
+    }
+
+    // собираем ответы: несколько галочек одного вопроса — через запятую
+    function collect() {
+        var data = {};
+        form.querySelectorAll('input[name], textarea[name]').forEach(function (el) {
+            if (el.name === 'botcheck') return;
+            if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+            var v = el.value.trim();
+            if (!v) return;
+            data[el.name] = data[el.name] ? data[el.name] + ', ' + v : v;
+        });
+        return data;
+    }
+
+    function asText(data) {
+        return Object.keys(data).map(function (k) { return k + ': ' + data[k]; }).join('\n');
+    }
+
+    function done(demoText) {
+        form.style.display = 'none';
+        progress.style.display = 'none';
+        label.style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        if (demoText) {
+            document.getElementById('demo').innerHTML =
+                '<p class="hint">Демо-режим: ключ сервиса форм ещё не вставлен, поэтому письмо не ушло. Вот что пришло бы на почту:</p>' +
+                '<div class="demo-box"></div>';
+            document.querySelector('#demo .demo-box').textContent = demoText;
+        }
+    }
+
+    function submit() {
+        var data = collect();
+        var key = window.ANKETA_KEY;
+        if (!key || key.indexOf('ВСТАВЬ') === 0) { done(asText(data)); return; }
+        if (form.botcheck.checked) return;
+
+        next.disabled = true;
+        next.textContent = 'Отправляю…';
+        var payload = {
+            access_key: key,
+            subject: 'Анкета на сайт: ' + (data['Имя'] || '') + ' — ' + (data['Тип сайта'] || ''),
+            from_name: 'Анкета edu-smile.ru'
+        };
+        Object.keys(data).forEach(function (k) { payload[k] = data[k]; });
+
+        fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) { done(); return; }
+            throw new Error(res.message);
+        })
+        .catch(function () {
+            next.disabled = false;
+            next.textContent = 'Отправить анкету';
+            alert('Не получилось отправить. Попробуйте ещё раз или напишите на info@edu-smile.ru');
+        });
+    }
+
+    next.addEventListener('click', function () {
+        if (!valid(current)) return;
+        if (current < steps.length - 1) show(current + 1);
+        else submit();
+    });
+    back.addEventListener('click', function () { show(current - 1); });
+
+    show(0);
+})();
+</script>
+
+</body>
+</html>
