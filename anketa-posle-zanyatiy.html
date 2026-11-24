@@ -12,7 +12,7 @@ h1 { font-size: clamp(1.6rem, 6vw, 2.4rem); line-height: 1.15; margin: .4rem 0; 
 fieldset { border: 0; padding: 0; margin: 1.25rem 0; min-width: 0; }
 legend, .question { font-weight: 700; }
 label.option { display: flex; gap: .6rem; align-items: center; padding: .45rem 0; }
-input[type=radio] { width: 1.1rem; height: 1.1rem; flex-shrink: 0; accent-color: #254fbc; }
+input[type=radio], input[type=checkbox] { width: 1.1rem; height: 1.1rem; flex-shrink: 0; accent-color: #254fbc; }
 textarea { display: block; width: 100%; padding: .7rem; margin-top: .5rem; border: 1px solid #687791; border-radius: .5rem; font: inherit; }
 button { background: #254fbc; color: white; border: 0; border-radius: .6rem; padding: .8rem 1.25rem; font: inherit; font-weight: 700; cursor: pointer; margin-top: 1rem; }
 button:disabled { opacity: .65; cursor: wait; }
@@ -35,9 +35,10 @@ button:disabled { opacity: .65; cursor: wait; }
 </fieldset>
 <fieldset>
 <legend>В каких занятиях ты участвовал(а)?</legend>
-<label class="option"><input type="radio" name="Формат" value="Очный мастер-класс" required>Очный мастер-класс</label>
-<label class="option"><input type="radio" name="Формат" value="Онлайн-курс">Онлайн-курс</label>
-<label class="option"><input type="radio" name="Формат" value="Очный мастер-класс и онлайн-курс">И мастер-класс, и онлайн-курс</label>
+<div>Можно выбрать несколько вариантов.</div>
+<label class="option"><input type="checkbox" name="Занятия" value="Мастер-класс, город Володарск">Мастер-класс, город Володарск</label>
+<label class="option"><input type="checkbox" name="Занятия" value="Мастер-класс, посёлок Ильиногорск">Мастер-класс, посёлок Ильиногорск</label>
+<label class="option"><input type="checkbox" name="Занятия" value="Онлайн-курс">Онлайн-курс</label>
 </fieldset>
 <fieldset>
 <legend>Сколько раз ты самостоятельно использовал(а) ИИ после занятий?</legend>
@@ -89,6 +90,15 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (button.disabled) return;
 
+  const fields = new FormData(form);
+  const classes = fields.getAll('Занятия');
+  if (classes.length === 0) {
+    status.textContent = 'Выбери хотя бы один вариант в вопросе о занятиях.';
+    form.querySelector('input[name="Занятия"]').focus();
+    return;
+  }
+  fields.set('Занятия', classes.join(' / '));
+
   button.disabled = true;
   status.textContent = 'Отправляем ответы…';
 
@@ -101,7 +111,7 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
-  const answers = Object.fromEntries(new FormData(form));
+  const answers = Object.fromEntries(fields);
   const payload = {
     ...answers,
     access_key: key,
