@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Опрос после занятий | ИИ — это просто</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #eef3fb; color: #192541; font: 1rem/1.55 system-ui, sans-serif; }
+main { width: min(100% - 2rem, 40rem); margin: 2rem auto; padding: clamp(1rem, 5vw, 2rem); background: white; border-radius: 1.25rem; }
+h1 { font-size: clamp(1.6rem, 6vw, 2.4rem); line-height: 1.15; margin: .4rem 0; }
+fieldset { border: 0; padding: 0; margin: 1.25rem 0; min-width: 0; }
+legend, .question { font-weight: 700; }
+label.option { display: flex; gap: .6rem; align-items: center; padding: .45rem 0; }
+input[type=radio] { width: 1.1rem; height: 1.1rem; flex-shrink: 0; accent-color: #254fbc; }
+textarea { display: block; width: 100%; padding: .7rem; margin-top: .5rem; border: 1px solid #687791; border-radius: .5rem; font: inherit; }
+button { background: #254fbc; color: white; border: 0; border-radius: .6rem; padding: .8rem 1.25rem; font: inherit; font-weight: 700; cursor: pointer; margin-top: 1rem; }
+button:disabled { opacity: .65; cursor: wait; }
+:focus-visible { outline: 3px solid #315aca; outline-offset: 3px; }
+#status:empty { margin: 0; }
+</style>
+<script src="/anketa-config.js" defer></script>
+</head>
+<body>
+<main>
+<header>
+<div>Школа «ИИ — это просто»</div>
+<h1>Как ты используешь ИИ после занятий?</h1>
+<p>Ответь за себя. Имя, контакты и другие личные данные указывать не нужно.</p>
+</header>
+<form id="survey">
+<fieldset>
+<legend>Кто отвечает?</legend>
+<label class="option"><input type="radio" name="Кто отвечает" value="Ребёнок" required>Я ребёнок</label>
+<label class="option"><input type="radio" name="Кто отвечает" value="Взрослый">Я взрослый</label>
+</fieldset>
+<fieldset>
+<legend>В каких занятиях ты участвовал(а)?</legend>
+<label class="option"><input type="radio" name="Формат" value="Очный мастер-класс" required>Очный мастер-класс</label>
+<label class="option"><input type="radio" name="Формат" value="Онлайн-курс">Онлайн-курс</label>
+<label class="option"><input type="radio" name="Формат" value="Очный мастер-класс и онлайн-курс">И мастер-класс, и онлайн-курс</label>
+</fieldset>
+<fieldset>
+<legend>Сколько раз ты самостоятельно использовал(а) ИИ после занятий?</legend>
+<label class="option"><input type="radio" name="Частота использования" value="Пока ни разу" required>Пока ни разу</label>
+<label class="option"><input type="radio" name="Частота использования" value="Один раз">Один раз</label>
+<label class="option"><input type="radio" name="Частота использования" value="Два раза или больше">Два раза или больше</label>
+</fieldset>
+<label class="question" for="example">Для чего ты использовал(а) ИИ и что получилось?</label>
+<div id="hint">Если ещё не пробовал(а), можешь написать, что помешало. Вопрос можно пропустить.</div>
+<textarea id="example" name="Пример или причина" rows="3" maxlength="500" aria-describedby="hint"></textarea>
+<button type="submit">Отправить ответы</button>
+</form>
+<p id="status" role="status" tabindex="-1"></p>
+</main>
+<script>
+const form = document.querySelector('#survey');
+const button = form.querySelector('button');
+const status = document.querySelector('#status');
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (button.disabled) return;
+
+  const key = window.ANKETA_KEY;
+  if (!key || key === 'ВСТАВЬ_КЛЮЧ_СЮДА') {
+    status.textContent = 'Отправка пока недоступна. Попробуй позже.';
+    return;
+  }
+
+  const answers = Object.fromEntries(new FormData(form));
+  const payload = {
+    ...answers,
+    access_key: key,
+    subject: 'Опрос школы «ИИ — это просто» после занятий',
+    from_name: 'Анкета edu-smile.ru'
+  };
+
+  button.disabled = true;
+  status.textContent = 'Отправляем ответы…';
+  try {
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error('Submission failed');
+    form.hidden = true;
+    status.textContent = 'Спасибо! Ответы отправлены.';
+    status.focus();
+  } catch {
+    status.textContent = 'Не получилось отправить ответы. Попробуй ещё раз.';
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
